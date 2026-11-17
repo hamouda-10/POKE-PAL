@@ -1,0 +1,2700 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Poke Pal — Build Your Bowl</title>
+  <meta name="description" content="Playful top-down interactive poke-bowl builder on a brushed-steel counter.">
+  <meta property="og:title" content="Poke Pal — Build Your Bowl">
+  <meta property="og:description" content="Playful top-down interactive poke-bowl builder on a brushed-steel counter.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Courier+Prime:wght@400;700&family=Fredoka:wght@400;500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --coral: #f2766a;
+      --coral-d: #e05d50;
+      --coral-l: #ffe2dc;
+      --teal: #0d6a6e;
+      --teal-d: #0a5155;
+      --teal-l: #d5efec;
+      --cream: #fff8f0;
+      --ink: #0f3b3e;
+      --u: calc(min(100vw, 177.78vh) / 100);
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      cursor: none !important;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1c2427;
+      font-family: 'Fredoka', sans-serif;
+      color: var(--ink);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Counter backdrop */
+    #counter {
+      position: fixed;
+      inset: -2%;
+      background-image: url('https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042539_bee90308-05ef-4b87-a91f-6b86c7e02f94.png&w=2400&q=86');
+      background-size: cover;
+      background-position: center;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #counter::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 42%, rgba(8, 18, 20, 0.42) 100%);
+      pointer-events: none;
+    }
+
+    /* 16:9 contained scene */
+    #scene {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: calc(100 * var(--u));
+      height: calc(56.25 * var(--u));
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    /* Top coral scalloped nav band */
+    #band {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(3.1 * var(--u));
+      background: var(--coral);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 calc(0.2 * var(--u)) calc(0.8 * var(--u)) rgba(0, 0, 0, 0.14);
+    }
+    #band::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      height: calc(0.7 * var(--u));
+      background-image: radial-gradient(circle closest-side at 50% 0, var(--coral) 96%, transparent 100%);
+      background-size: calc(1.4 * var(--u)) calc(0.7 * var(--u));
+      background-repeat: repeat-x;
+      filter: drop-shadow(0 calc(0.18 * var(--u)) calc(0.22 * var(--u)) rgba(0, 0, 0, 0.18));
+      pointer-events: none;
+    }
+    .band-inner {
+      width: calc(100 * var(--u));
+      padding: 0 calc(2.4 * var(--u));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: calc(2.2 * var(--u));
+    }
+    .nav-link {
+      position: relative;
+      background: none;
+      border: none;
+      padding: calc(0.2 * var(--u)) 0;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.95 * var(--u));
+      color: var(--teal-d);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: calc(-0.08 * var(--u));
+      height: calc(0.15 * var(--u));
+      background: var(--teal-d);
+      border-radius: 99px;
+      transform: scaleX(0);
+      transform-origin: center;
+      transition: transform 0.22s var(--spring);
+    }
+    .nav-link:hover::after {
+      transform: scaleX(1);
+    }
+    .how-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: calc(0.55 * var(--u));
+      background: none;
+      border: none;
+      padding: calc(0.2 * var(--u)) 0;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.95 * var(--u));
+      color: var(--teal-d);
+      white-space: nowrap;
+    }
+    .how-q {
+      width: calc(1.45 * var(--u));
+      height: calc(1.45 * var(--u));
+      border-radius: 50%;
+      border: calc(0.14 * var(--u)) solid var(--teal-d);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: calc(0.88 * var(--u));
+      line-height: 1;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+    .how-btn:hover .how-q,
+    .how-btn[aria-expanded="true"] .how-q {
+      background: var(--teal-d);
+      color: var(--cream);
+    }
+
+    #how-popover {
+      position: fixed;
+      top: calc(4.2 * var(--u));
+      right: max(calc(2.4 * var(--u)), calc(50vw - 47.6 * var(--u)));
+      width: calc(21 * var(--u));
+      background: var(--cream);
+      border: calc(0.16 * var(--u)) solid var(--teal);
+      border-radius: calc(1.2 * var(--u));
+      padding: calc(1.3 * var(--u)) calc(1.5 * var(--u));
+      box-shadow: 0 calc(1 * var(--u)) calc(2.4 * var(--u)) rgba(0, 0, 0, 0.24);
+      z-index: 600;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(calc(-0.8 * var(--u))) scale(0.94);
+      transition: opacity 0.22s ease, transform 0.28s var(--spring);
+    }
+    #how-popover.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+    #how-popover h3 {
+      margin: 0 0 calc(0.8 * var(--u));
+      font-family: 'Lilita One', cursive;
+      font-size: calc(1.35 * var(--u));
+      color: var(--teal);
+      letter-spacing: 0.01em;
+    }
+    #how-popover ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: calc(0.65 * var(--u));
+    }
+    #how-popover li {
+      display: flex;
+      align-items: flex-start;
+      gap: calc(0.6 * var(--u));
+      font-size: calc(0.95 * var(--u));
+      font-weight: 500;
+      line-height: 1.3;
+      color: var(--ink);
+    }
+    #how-popover .step-num {
+      flex-shrink: 0;
+      width: calc(1.45 * var(--u));
+      height: calc(1.45 * var(--u));
+      border-radius: 50%;
+      background: var(--coral);
+      color: #fff;
+      font-weight: 700;
+      font-size: calc(0.82 * var(--u));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: calc(0.05 * var(--u));
+    }
+
+    /* Brand Logo */
+    #logo {
+      position: absolute;
+      left: calc(2.2 * var(--u));
+      top: calc(4.6 * var(--u));
+      display: flex;
+      align-items: center;
+      gap: calc(1.15 * var(--u));
+      z-index: 40;
+      pointer-events: none;
+    }
+    .logo-mark {
+      font-family: 'Lilita One', cursive;
+      font-size: calc(3.9 * var(--u));
+      line-height: 0.82;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      filter: drop-shadow(0 calc(0.22 * var(--u)) calc(0.28 * var(--u)) rgba(0, 0, 0, 0.25));
+    }
+    .logo-poke, .logo-pal {
+      -webkit-text-stroke: calc(0.16 * var(--u)) #fff;
+      paint-order: stroke fill;
+      letter-spacing: 0.01em;
+    }
+    .logo-poke { color: var(--teal); }
+    .logo-pal { color: var(--coral); }
+    .logo-tag {
+      font-family: 'Caveat Brush', cursive;
+      font-size: calc(1.8 * var(--u));
+      line-height: 0.96;
+      color: var(--coral);
+      transform: rotate(-5deg);
+      -webkit-text-stroke: calc(0.12 * var(--u)) #fff;
+      paint-order: stroke fill;
+      filter: drop-shadow(0 calc(0.15 * var(--u)) calc(0.2 * var(--u)) rgba(0, 0, 0, 0.22));
+    }
+
+    /* Stickers */
+    .sticker {
+      position: absolute;
+      font-family: 'Caveat Brush', cursive;
+      font-size: calc(2.05 * var(--u));
+      line-height: 1;
+      -webkit-text-stroke: calc(0.14 * var(--u)) #fff;
+      paint-order: stroke fill;
+      filter: drop-shadow(0 calc(0.18 * var(--u)) calc(0.25 * var(--u)) rgba(0, 0, 0, 0.24));
+      pointer-events: none;
+      z-index: 35;
+      white-space: nowrap;
+    }
+    #sticker-top-right {
+      right: calc(3.2 * var(--u));
+      top: calc(4.8 * var(--u));
+      color: var(--teal);
+      --rot: 3deg;
+    }
+    #sticker-bottom-left {
+      left: calc(2 * var(--u));
+      top: calc(51.6 * var(--u));
+      color: var(--coral);
+      --rot: -3deg;
+    }
+    #sticker-bottom-right {
+      right: calc(2.8 * var(--u));
+      top: calc(50.5 * var(--u));
+      color: var(--coral);
+      --rot: -6deg;
+    }
+
+    /* Sprite shared class */
+    .sprite {
+      background-repeat: no-repeat;
+      filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.35));
+      pointer-events: none;
+    }
+
+    /* Intro screen */
+    #intro-copy {
+      position: absolute;
+      left: calc(7 * var(--u));
+      top: calc(17 * var(--u));
+      width: calc(23.5 * var(--u));
+      z-index: 25;
+      transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #intro-copy h1 {
+      margin: 0 0 calc(1.1 * var(--u));
+      font-family: 'Lilita One', cursive;
+      font-size: calc(3.6 * var(--u));
+      line-height: 1.02;
+      color: var(--teal);
+      -webkit-text-stroke: calc(0.14 * var(--u)) rgba(255, 255, 255, 0.92);
+      paint-order: stroke fill;
+      filter: drop-shadow(0 calc(0.15 * var(--u)) calc(0.22 * var(--u)) rgba(0, 0, 0, 0.16));
+    }
+    #intro-copy p {
+      margin: 0;
+      font-size: calc(1.05 * var(--u));
+      line-height: 1.48;
+      font-weight: 500;
+      color: var(--ink);
+      background: rgba(255, 248, 240, 0.72);
+      padding: calc(0.85 * var(--u)) calc(1.05 * var(--u));
+      border-radius: calc(0.85 * var(--u));
+      box-shadow: 0 calc(0.3 * var(--u)) calc(1 * var(--u)) rgba(0, 0, 0, 0.08);
+    }
+
+    #closed-box {
+      position: absolute;
+      left: calc(32.5 * var(--u));
+      top: calc(16.4 * var(--u));
+      width: calc(38 * var(--u));
+      height: calc(30 * var(--u));
+      z-index: 25;
+      transition: transform 0.45s var(--spring), opacity 0.4s ease;
+    }
+    #closed-box:hover {
+      transform: translateY(calc(-0.8 * var(--u))) rotate(-1deg);
+    }
+
+    #open-btn {
+      position: absolute;
+      left: 50%;
+      top: calc(46 * var(--u));
+      transform: translateX(-50%);
+      z-index: 26;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: calc(0.9 * var(--u)) calc(2.1 * var(--u));
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(1.12 * var(--u));
+      box-shadow: 0 calc(0.55 * var(--u)) calc(1.4 * var(--u)) rgba(10, 81, 85, 0.35);
+      transition: transform 0.25s var(--spring), background 0.2s ease, opacity 0.35s ease;
+      white-space: nowrap;
+    }
+    #open-btn:hover {
+      background: var(--teal-d);
+      transform: translateX(-50%) translateY(calc(-0.22 * var(--u))) scale(1.04);
+    }
+
+    body.open #closed-box {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(calc(-3.5 * var(--u))) rotate(-4deg);
+    }
+    body.open #intro-copy {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(calc(-5 * var(--u)));
+    }
+    body.open #open-btn {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(calc(1.5 * var(--u))) scale(0.9);
+    }
+
+    /* Builder stagger entrance */
+    .builder-item {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(30px) scale(0.8) rotate(var(--rot, 0deg));
+      transition:
+        opacity 0.45s ease,
+        transform 0.55s var(--spring);
+      transition-delay: calc(var(--i, 0) * 50ms);
+    }
+    body.open .builder-item {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1) rotate(var(--rot, 0deg));
+    }
+    body.open .sticker.builder-item {
+      pointer-events: none;
+    }
+    body.open .builder-item.settled {
+      transition-delay: 0ms;
+    }
+
+    /* Pans */
+    .pan-slot {
+      position: absolute;
+      width: calc(9.2 * var(--u));
+      height: calc(9.4 * var(--u));
+      z-index: 20;
+    }
+    .pan-visual {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.24s var(--spring);
+    }
+    .pan-slot:hover .pan-visual {
+      transform: translateY(-5px) scale(1.03);
+    }
+    .pan-tag {
+      position: absolute;
+      left: 50%;
+      bottom: calc(-0.35 * var(--u));
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: calc(0.32 * var(--u));
+      background: var(--teal);
+      color: #fff;
+      padding: calc(0.2 * var(--u)) calc(0.58 * var(--u)) calc(0.2 * var(--u)) calc(0.24 * var(--u));
+      border-radius: 999px;
+      font-size: calc(0.68 * var(--u));
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 calc(0.22 * var(--u)) calc(0.5 * var(--u)) rgba(0, 0, 0, 0.25);
+      transition: background 0.22s ease, transform 0.22s var(--spring);
+      z-index: 3;
+    }
+    .pan-slot.used .pan-tag {
+      background: var(--coral);
+    }
+    .pan-emoji {
+      width: calc(1.18 * var(--u));
+      height: calc(1.18 * var(--u));
+      border-radius: 50%;
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(0.75 * var(--u));
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .pan-price {
+      opacity: 0.92;
+      font-weight: 500;
+    }
+
+    /* Bottles */
+    .bottle-slot {
+      position: absolute;
+      top: calc(4.4 * var(--u));
+      width: calc(5.6 * var(--u));
+      height: calc(16 * var(--u));
+      z-index: 22;
+    }
+    .bottle-visual {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.26s var(--spring), opacity 0.18s ease;
+    }
+    .bottle-slot:hover .bottle-visual {
+      transform: translateY(-6px) rotate(-3deg);
+    }
+    .bottle-slot.carrying .bottle-visual {
+      opacity: 0;
+    }
+    .bottle-tag {
+      position: absolute;
+      left: 50%;
+      bottom: calc(-0.55 * var(--u));
+      transform: translateX(-50%);
+      background: var(--cream);
+      color: var(--ink);
+      padding: calc(0.24 * var(--u)) calc(0.65 * var(--u));
+      border-radius: 999px;
+      font-size: calc(0.7 * var(--u));
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 calc(0.22 * var(--u)) calc(0.5 * var(--u)) rgba(0, 0, 0, 0.24);
+      transition: background 0.22s ease, color 0.22s ease;
+      z-index: 3;
+    }
+    .bottle-slot.used .bottle-tag {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    /* Open Bento Box */
+    #open-box {
+      position: absolute;
+      left: calc(29.5 * var(--u));
+      top: calc(22.4 * var(--u));
+      width: calc(42 * var(--u));
+      height: calc(28 * var(--u));
+      z-index: 15;
+    }
+    #box-sprite {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Bowl inside left compartment */
+    #bowl {
+      position: absolute;
+      z-index: 5;
+      transition: filter 0.2s ease, transform 0.2s ease;
+      transform-origin: center 65%;
+    }
+    #bowl.glow {
+      filter: drop-shadow(0 0 calc(1.4 * var(--u)) rgba(242, 118, 106, 0.92))
+              drop-shadow(0 0 calc(0.5 * var(--u)) rgba(242, 118, 106, 0.8));
+    }
+    #bowl.squash {
+      animation: bowlSquash 0.42s var(--spring);
+    }
+    @keyframes bowlSquash {
+      0% { transform: scale(1, 1); }
+      35% { transform: scale(1.08, 0.9); }
+      70% { transform: scale(0.97, 1.03); }
+      100% { transform: scale(1, 1); }
+    }
+
+    .bowl-layer {
+      position: absolute;
+      inset: 0;
+    }
+    #bowl-rice {
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    #bowl.has-rice #bowl-rice {
+      opacity: 1;
+    }
+
+    #piles {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .pile {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+      transition: filter 0.16s ease;
+    }
+    .pile:hover {
+      filter: brightness(1.06);
+    }
+    .pile.dropping {
+      animation: drop 0.42s var(--spring) forwards;
+    }
+    @keyframes drop {
+      0% { transform: translate(-50%, -50%) translateY(-40%) scale(1.25); }
+      60% { transform: translate(-50%, -50%) scale(1.08, 0.9); }
+      100% { transform: translate(-50%, -50%) scale(1, 1); }
+    }
+
+    #sauce-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 200;
+      pointer-events: none;
+    }
+    #garnish-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 210;
+      pointer-events: none;
+    }
+
+    /* Right compartment */
+    #side-comp {
+      position: absolute;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: filter 0.2s ease;
+    }
+    #side-comp.glow {
+      filter: drop-shadow(0 0 calc(1.1 * var(--u)) rgba(242, 118, 106, 0.85));
+    }
+    #menu-card {
+      position: absolute;
+      width: 84%;
+      padding: calc(1.2 * var(--u)) calc(1 * var(--u));
+      background: var(--cream);
+      border-radius: calc(0.75 * var(--u));
+      border: calc(0.14 * var(--u)) dashed rgba(242, 118, 106, 0.45);
+      box-shadow: 0 calc(0.4 * var(--u)) calc(1 * var(--u)) rgba(0, 0, 0, 0.18);
+      text-align: center;
+      transform: rotate(-2deg);
+      transition: transform 0.48s cubic-bezier(0.34, 1.25, 0.64, 1), opacity 0.36s ease;
+      pointer-events: none;
+    }
+    #menu-card.away {
+      opacity: 0;
+      transform: rotate(28deg) scale(0.4) translateY(calc(-3 * var(--u)));
+    }
+    .menu-card-title {
+      font-family: 'Caveat Brush', cursive;
+      font-size: calc(1.95 * var(--u));
+      line-height: 1;
+      color: var(--coral);
+      margin-bottom: calc(0.3 * var(--u));
+    }
+    .menu-card-sub {
+      font-family: 'Caveat Brush', cursive;
+      font-size: calc(1.05 * var(--u));
+      color: var(--coral-d);
+      opacity: 0.92;
+    }
+    #placed-side {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    #placed-side.bounce {
+      animation: sideBounce 0.45s var(--spring);
+    }
+    @keyframes sideBounce {
+      0% { transform: scale(1.22) translateY(calc(-1.8 * var(--u))); }
+      55% { transform: scale(0.94, 1.05) translateY(0); }
+      100% { transform: scale(1, 1) translateY(0); }
+    }
+
+    /* Sides shelf */
+    .side-slot {
+      position: absolute;
+      left: calc(83.5 * var(--u));
+      width: calc(11 * var(--u));
+      height: calc(12.4 * var(--u));
+      z-index: 20;
+      transition: opacity 0.25s ease;
+    }
+    .side-visual {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.24s var(--spring), opacity 0.24s ease;
+    }
+    .side-slot:hover .side-visual {
+      transform: translateY(-5px) scale(1.03);
+    }
+    .side-slot.in-box .side-visual {
+      opacity: 0.35;
+    }
+    .side-tag {
+      position: absolute;
+      left: 50%;
+      bottom: calc(-0.3 * var(--u));
+      transform: translateX(-50%);
+      background: var(--teal);
+      color: #fff;
+      padding: calc(0.22 * var(--u)) calc(0.7 * var(--u));
+      border-radius: 999px;
+      font-size: calc(0.72 * var(--u));
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 calc(0.22 * var(--u)) calc(0.5 * var(--u)) rgba(0, 0, 0, 0.24);
+      z-index: 3;
+    }
+
+    /* Bottom step bar */
+    #bar {
+      position: absolute;
+      left: 50%;
+      top: calc(51.2 * var(--u));
+      transform: translateX(-50%);
+      z-index: 50;
+      background: var(--cream);
+      border-radius: 999px;
+      padding: calc(0.45 * var(--u)) calc(0.75 * var(--u)) calc(0.45 * var(--u)) calc(0.85 * var(--u));
+      display: flex;
+      align-items: center;
+      gap: calc(0.85 * var(--u));
+      box-shadow: 0 calc(0.5 * var(--u)) calc(1.5 * var(--u)) rgba(0, 0, 0, 0.26);
+      white-space: nowrap;
+    }
+    body:not(.open) #bar {
+      transform: translateX(-50%) translateY(30px) scale(0.8);
+    }
+    body.open #bar {
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+    .steps {
+      display: flex;
+      align-items: center;
+      gap: calc(0.35 * var(--u));
+    }
+    .step {
+      display: inline-flex;
+      align-items: center;
+      gap: calc(0.35 * var(--u));
+      padding: calc(0.26 * var(--u)) calc(0.62 * var(--u)) calc(0.26 * var(--u)) calc(0.3 * var(--u));
+      border-radius: 999px;
+      font-size: calc(0.76 * var(--u));
+      font-weight: 600;
+      color: var(--ink);
+      transition: background 0.22s ease, color 0.22s ease;
+    }
+    .step.current {
+      background: var(--teal-l);
+    }
+    .step-ring {
+      width: calc(1.25 * var(--u));
+      height: calc(1.25 * var(--u));
+      border-radius: 50%;
+      border: calc(0.13 * var(--u)) solid var(--teal);
+      color: var(--teal);
+      font-size: calc(0.72 * var(--u));
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.22s ease, color 0.22s ease;
+    }
+    .step.done .step-ring {
+      background: var(--teal);
+      color: #fff;
+    }
+    .bar-sep {
+      width: calc(0.1 * var(--u));
+      height: calc(1.6 * var(--u));
+      background: rgba(15, 59, 62, 0.16);
+    }
+    #bar-total {
+      font-family: 'Courier Prime', monospace;
+      font-weight: 700;
+      font-size: calc(1.05 * var(--u));
+      color: var(--ink);
+      min-width: calc(4.3 * var(--u));
+      text-align: right;
+    }
+    #top-off-btn {
+      background: var(--coral);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: calc(0.45 * var(--u)) calc(1.05 * var(--u));
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.84 * var(--u));
+      transition: background 0.18s ease, transform 0.22s var(--spring), opacity 0.2s ease;
+      box-shadow: 0 calc(0.2 * var(--u)) calc(0.6 * var(--u)) rgba(224, 93, 80, 0.35);
+    }
+    #top-off-btn:hover:not(:disabled) {
+      background: var(--coral-d);
+      transform: translateY(calc(-0.12 * var(--u))) scale(1.03);
+    }
+    #top-off-btn:disabled {
+      opacity: 0.45;
+    }
+    #undo-btn {
+      background: none;
+      border: none;
+      padding: calc(0.2 * var(--u)) calc(0.4 * var(--u));
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.78 * var(--u));
+      color: var(--teal-d);
+      text-decoration: underline;
+      text-underline-offset: calc(0.16 * var(--u));
+      transition: opacity 0.2s ease, color 0.18s ease;
+    }
+    #undo-btn:disabled {
+      opacity: 0.35;
+    }
+    #undo-btn:hover:not(:disabled) {
+      color: var(--coral-d);
+    }
+
+    /* Toast */
+    #toast {
+      position: absolute;
+      left: 50%;
+      top: calc(47.4 * var(--u));
+      transform: translateX(-50%) translateY(calc(1.2 * var(--u))) scale(0.85);
+      background: var(--teal);
+      color: #fff;
+      padding: calc(0.42 * var(--u)) calc(1.15 * var(--u));
+      border-radius: 999px;
+      font-size: calc(0.88 * var(--u));
+      font-weight: 600;
+      box-shadow: 0 calc(0.45 * var(--u)) calc(1.1 * var(--u)) rgba(0, 0, 0, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 250;
+      white-space: nowrap;
+      transition: opacity 0.22s ease, transform 0.36s var(--spring);
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+
+    /* Receipt */
+    #receipt {
+      position: absolute;
+      left: calc(3.2 * var(--u));
+      top: calc(9.2 * var(--u));
+      width: calc(22.5 * var(--u));
+      background: var(--cream);
+      padding: calc(1.6 * var(--u)) calc(1.5 * var(--u)) calc(2.1 * var(--u));
+      color: var(--ink);
+      z-index: 180;
+      transform: translateX(calc(-30 * var(--u))) rotate(-1.2deg);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.6s cubic-bezier(0.22, 1.15, 0.36, 1), opacity 0.35s ease;
+      filter: drop-shadow(0 calc(1 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.32));
+      -webkit-mask-image:
+        linear-gradient(#000, #000),
+        radial-gradient(circle at 50% 0, #000 68%, transparent 72%);
+      -webkit-mask-size: 100% calc(100% - 9px), 16px 9px;
+      -webkit-mask-position: 0 0, 0 100%;
+      -webkit-mask-repeat: no-repeat, repeat-x;
+      mask-image:
+        linear-gradient(#000, #000),
+        radial-gradient(circle at 50% 0, #000 68%, transparent 72%);
+      mask-size: 100% calc(100% - 9px), 16px 9px;
+      mask-position: 0 0, 0 100%;
+      mask-repeat: no-repeat, repeat-x;
+    }
+    #receipt.show {
+      transform: translateX(0) rotate(-1.2deg);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .rcp-title {
+      font-family: 'Lilita One', cursive;
+      font-size: calc(2.05 * var(--u));
+      color: var(--teal);
+      text-align: center;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+    .rcp-sub {
+      font-family: 'Courier Prime', monospace;
+      font-size: calc(0.75 * var(--u));
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.1em;
+      margin-top: calc(0.25 * var(--u));
+      color: var(--ink);
+    }
+    .rcp-rule {
+      border: none;
+      border-top: calc(0.12 * var(--u)) dashed rgba(15, 59, 62, 0.35);
+      margin: calc(0.75 * var(--u)) 0;
+    }
+    #rcp-lines {
+      font-family: 'Courier Prime', monospace;
+      font-size: calc(0.78 * var(--u));
+      display: flex;
+      flex-direction: column;
+      gap: calc(0.32 * var(--u));
+      min-height: calc(5 * var(--u));
+    }
+    .rcp-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      opacity: 0;
+      transform: translateY(calc(-0.35 * var(--u)));
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    .rcp-line.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .rcp-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-family: 'Courier Prime', monospace;
+      font-weight: 700;
+      font-size: calc(1.08 * var(--u));
+    }
+    .rcp-modes {
+      display: flex;
+      gap: calc(0.9 * var(--u));
+      margin: calc(0.75 * var(--u)) 0 calc(0.85 * var(--u));
+      font-size: calc(0.8 * var(--u));
+      font-weight: 600;
+    }
+    .rcp-radio {
+      display: inline-flex;
+      align-items: center;
+      gap: calc(0.35 * var(--u));
+    }
+    .rcp-radio input {
+      accent-color: var(--teal);
+      width: calc(0.95 * var(--u));
+      height: calc(0.95 * var(--u));
+      margin: 0;
+    }
+    #checkout-open-btn {
+      width: 100%;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: calc(0.65 * var(--u)) calc(1 * var(--u));
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.95 * var(--u));
+      transition: background 0.18s ease, transform 0.22s var(--spring);
+    }
+    #checkout-open-btn:hover {
+      background: var(--teal-d);
+      transform: translateY(calc(-0.1 * var(--u)));
+    }
+    #back-building-btn {
+      display: block;
+      margin: calc(0.55 * var(--u)) auto 0;
+      background: none;
+      border: none;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.78 * var(--u));
+      color: var(--teal-d);
+      text-decoration: underline;
+    }
+
+    /* Checkout overlay */
+    #checkout-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 59, 62, 0.28);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #checkout-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #checkout-card {
+      width: calc(30 * var(--u));
+      background: var(--coral-l);
+      border-radius: calc(1.5 * var(--u));
+      padding: calc(2.1 * var(--u)) calc(2.2 * var(--u));
+      box-shadow: 0 calc(1.5 * var(--u)) calc(3.6 * var(--u)) rgba(0, 0, 0, 0.3);
+      border: calc(0.18 * var(--u)) solid #fff;
+      transform: rotate(-1deg) scale(0.84) translateY(calc(2.5 * var(--u)));
+      transition: transform 0.48s var(--spring), opacity 0.3s ease;
+      opacity: 0;
+      color: var(--ink);
+    }
+    #checkout-overlay.show #checkout-card {
+      transform: rotate(-1deg) scale(1) translateY(0);
+      opacity: 1;
+    }
+    #checkout-card h2 {
+      margin: 0 0 calc(1.2 * var(--u));
+      font-family: 'Lilita One', cursive;
+      font-size: calc(2.35 * var(--u));
+      line-height: 1.02;
+      color: var(--teal);
+    }
+    .field {
+      margin-bottom: calc(0.85 * var(--u));
+    }
+    .field label {
+      display: block;
+      font-size: calc(0.8 * var(--u));
+      font-weight: 600;
+      margin-bottom: calc(0.25 * var(--u));
+      color: var(--teal-d);
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: calc(0.55 * var(--u)) calc(0.8 * var(--u));
+      border-radius: calc(0.65 * var(--u));
+      border: calc(0.14 * var(--u)) solid rgba(13, 106, 110, 0.28);
+      background: var(--cream);
+      font-family: 'Fredoka', sans-serif;
+      font-size: calc(0.92 * var(--u));
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.18s ease;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--teal);
+    }
+    .field input.err {
+      border-color: var(--coral-d);
+      animation: shake 0.3s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .co-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin: calc(1.05 * var(--u)) 0;
+      padding-top: calc(0.75 * var(--u));
+      border-top: calc(0.12 * var(--u)) dashed rgba(15, 59, 62, 0.25);
+      font-family: 'Courier Prime', monospace;
+      font-weight: 700;
+      font-size: calc(1.15 * var(--u));
+    }
+    #place-order-btn {
+      width: 100%;
+      background: var(--teal);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: calc(0.75 * var(--u)) calc(1.4 * var(--u));
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(1.02 * var(--u));
+      transition: background 0.18s ease, transform 0.22s var(--spring);
+    }
+    #place-order-btn:hover {
+      background: var(--teal-d);
+      transform: translateY(calc(-0.12 * var(--u)));
+    }
+    #co-cancel-btn {
+      display: block;
+      margin: calc(0.6 * var(--u)) auto 0;
+      background: none;
+      border: none;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.78 * var(--u));
+      color: var(--teal-d);
+      text-decoration: underline;
+    }
+
+    /* Confirmation view inside checkout card */
+    #co-confirm {
+      display: none;
+      text-align: center;
+      padding: calc(0.8 * var(--u)) 0 calc(0.4 * var(--u));
+    }
+    #checkout-card.confirmed #co-form {
+      display: none;
+    }
+    #checkout-card.confirmed #co-confirm {
+      display: block;
+    }
+    .confirm-circle {
+      width: calc(5.2 * var(--u));
+      height: calc(5.2 * var(--u));
+      border-radius: 50%;
+      background: var(--teal);
+      margin: 0 auto calc(1.1 * var(--u));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 calc(0.5 * var(--u)) calc(1.4 * var(--u)) rgba(13, 106, 110, 0.35);
+      animation: popIn 0.45s var(--spring);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.4); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .confirm-tick {
+      width: calc(2.7 * var(--u));
+      height: calc(2.7 * var(--u));
+    }
+    .confirm-tick path {
+      stroke: #fff;
+      stroke-width: 4.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+    }
+    #checkout-card.confirmed .confirm-tick path {
+      animation: drawTick 0.55s 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes drawTick {
+      to { stroke-dashoffset: 0; }
+    }
+    .confirm-order {
+      font-family: 'Courier Prime', monospace;
+      font-weight: 700;
+      font-size: calc(1.25 * var(--u));
+      color: var(--ink);
+      margin-bottom: calc(1.2 * var(--u));
+    }
+    #another-btn {
+      background: var(--coral);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: calc(0.7 * var(--u)) calc(1.6 * var(--u));
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: calc(0.95 * var(--u));
+      transition: background 0.18s ease, transform 0.22s var(--spring);
+    }
+    #another-btn:hover {
+      background: var(--coral-d);
+      transform: translateY(calc(-0.12 * var(--u)));
+    }
+
+    /* Held item container */
+    #held {
+      position: fixed;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      z-index: 9000;
+      transform-origin: center center;
+      filter: drop-shadow(0 20px 22px rgba(0, 0, 0, 0.42));
+      display: none;
+    }
+    #held.active {
+      display: block;
+    }
+
+    /* Flying return clone */
+    .fly-clone {
+      position: fixed;
+      pointer-events: none;
+      z-index: 8500;
+      filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.36));
+    }
+
+    /* Glove cursor */
+    #glove {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 58px;
+      height: 62px;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0;
+      filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.32));
+      will-change: transform;
+    }
+    #glove.visible {
+      opacity: 1;
+    }
+    #glove .g-state {
+      display: none;
+    }
+    #glove[data-state="open"] .g-open,
+    #glove[data-state="point"] .g-point,
+    #glove[data-state="grab"] .g-grab {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="counter"></div>
+
+  <header id="band">
+    <div class="band-inner">
+      <nav class="nav-links">
+        <a href="#menu" class="nav-link" data-nav="menu">Menu</a>
+        <a href="#build" class="nav-link" data-nav="build">Build Your Poke Bowl</a>
+        <a href="#bowls" class="nav-link" data-nav="bowls">Bowls</a>
+        <a href="#sides" class="nav-link" data-nav="sides">Sides</a>
+        <a href="#drinks" class="nav-link" data-nav="drinks">Drinks</a>
+        <a href="#help" class="nav-link" data-nav="help">Help</a>
+      </nav>
+      <button type="button" id="how-btn" class="how-btn" aria-expanded="false">
+        <span>How it works</span>
+        <span class="how-q">?</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="how-popover" role="dialog" aria-label="How it works">
+    <h3>How it works</h3>
+    <ol>
+      <li><span class="step-num">1</span><span>Grab rice, then your toppings.</span></li>
+      <li><span class="step-num">2</span><span>Pick up a bottle and drizzle.</span></li>
+      <li><span class="step-num">3</span><span>Drop in a side, top it off, check out.</span></li>
+    </ol>
+  </div>
+
+  <main id="scene">
+    <div id="logo">
+      <div class="logo-mark">
+        <span class="logo-poke">POKE</span>
+        <span class="logo-pal">PAL</span>
+      </div>
+      <div class="logo-tag">Fresh bowls.<br>Better days.</div>
+    </div>
+
+    <!-- Intro -->
+    <section id="intro-copy">
+      <h1>Good things come in bowls.</h1>
+      <p>A little rice, a lot of fresh. Build your bowl, sauce it up and grab a side.</p>
+    </section>
+    <div id="closed-box" data-interactive="true" aria-label="Open Poke Pal box"></div>
+    <button type="button" id="open-btn">Open for something fresh ↗</button>
+
+    <!-- Stickers -->
+    <div id="sticker-top-right" class="sticker builder-item" style="--i: 12">Better together.</div>
+    <div id="sticker-bottom-left" class="sticker builder-item" style="--i: 13">Make it yours!</div>
+    <div id="sticker-bottom-right" class="sticker builder-item" style="--i: 14">Poke Pal!</div>
+
+    <!-- Builder containers -->
+    <div id="pans-layer"></div>
+    <div id="bottles-layer"></div>
+
+    <div id="open-box" class="builder-item" style="--i: 4">
+      <div id="box-sprite"></div>
+      <div id="bowl">
+        <div id="bowl-empty" class="bowl-layer"></div>
+        <div id="bowl-rice" class="bowl-layer"></div>
+        <div id="piles"></div>
+        <canvas id="sauce-canvas"></canvas>
+        <canvas id="garnish-canvas"></canvas>
+      </div>
+      <div id="side-comp">
+        <div id="menu-card">
+          <div class="menu-card-title">Poke Bowl</div>
+          <div class="menu-card-sub">Fresh ingredients · Big vibes</div>
+        </div>
+        <div id="placed-side"></div>
+      </div>
+    </div>
+
+    <div id="sides-layer"></div>
+
+    <div id="toast" aria-live="polite"></div>
+
+    <div id="bar" class="builder-item" style="--i: 15">
+      <div class="steps">
+        <div class="step current" data-step="1"><span class="step-ring">1</span><span>Choose base</span></div>
+        <div class="step" data-step="2"><span class="step-ring">2</span><span>Add proteins</span></div>
+        <div class="step" data-step="3"><span class="step-ring">3</span><span>Pick toppings</span></div>
+        <div class="step" data-step="4"><span class="step-ring">4</span><span>Select sauce</span></div>
+      </div>
+      <div class="bar-sep"></div>
+      <div id="bar-total">$0.00</div>
+      <button type="button" id="top-off-btn" disabled>Top it off ↗</button>
+      <button type="button" id="undo-btn" disabled>↺ Undo</button>
+    </div>
+
+    <!-- Receipt -->
+    <aside id="receipt" aria-label="Order receipt">
+      <div class="rcp-title">POKE PAL</div>
+      <div class="rcp-sub">ONE VERY GOOD BOWL</div>
+      <hr class="rcp-rule">
+      <div id="rcp-lines"></div>
+      <hr class="rcp-rule">
+      <div class="rcp-total-row">
+        <span>TOTAL</span>
+        <span id="rcp-total">$0.00</span>
+      </div>
+      <div class="rcp-modes">
+        <label class="rcp-radio"><input type="radio" name="fulfill" value="pickup" checked> Pick up</label>
+        <label class="rcp-radio"><input type="radio" name="fulfill" value="delivery"> Delivery +$4</label>
+      </div>
+      <button type="button" id="checkout-open-btn">Checkout ↗</button>
+      <button type="button" id="back-building-btn">← Back to building</button>
+    </aside>
+  </main>
+
+  <!-- Checkout modal -->
+  <div id="checkout-overlay" role="dialog" aria-modal="true" aria-label="Checkout">
+    <div id="checkout-card">
+      <div id="co-form">
+        <h2>Good food.<br>Coming your way.</h2>
+        <div class="field">
+          <label for="co-name">Your name</label>
+          <input id="co-name" type="text" placeholder="Maya Lin" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="co-phone">Phone</label>
+          <input id="co-phone" type="tel" placeholder="(555) 234-5678" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label for="co-place" id="co-place-label">Pick up at</label>
+          <select id="co-place"></select>
+        </div>
+        <div class="co-total-row">
+          <span>TOTAL</span>
+          <span id="co-total">$0.00</span>
+        </div>
+        <button type="button" id="place-order-btn">Place my order ↗</button>
+        <button type="button" id="co-cancel-btn">← Back to receipt</button>
+      </div>
+      <div id="co-confirm">
+        <div class="confirm-circle">
+          <svg class="confirm-tick" viewBox="0 0 40 40">
+            <path d="M9 21 L17 29 L31 12" />
+          </svg>
+        </div>
+        <h2>Good food.<br>Coming your way.</h2>
+        <div class="confirm-order">Order #PP-2481</div>
+        <button type="button" id="another-btn">Build another bowl</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Held item under glove -->
+  <div id="held"></div>
+
+  <!-- Coral rubber-glove cursor -->
+  <svg id="glove" viewBox="0 0 58 62" data-state="open" aria-hidden="true">
+    <!-- Open palm -->
+    <g class="g-state g-open">
+      <path d="M18 46 L16 32 C15 29 11 26 9 23 C7.2 20.5 10.5 17.5 13 20 L17 25 L17 12 C17 9 21 9 21 12 L21 24 L23 8 C23 5 27.5 5 27.5 8 L27.5 23 L30 9.5 C30 6.5 34.5 6.5 34.5 9.5 L34.5 24 L37 14 C37 11 41 11.5 41 14.5 L40 31 C40 38 37 44 35 46 L37 56 C37 58 17 58 17 56 Z"
+            fill="#f2766a" stroke="#a8392f" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M17 48 C23 49 30 49 36 48" fill="none" stroke="#a8392f" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <!-- Pointing index -->
+    <g class="g-state g-point">
+      <path d="M18 47 L16 35 C15 32 11 29 10 26 C8.8 23.2 12 20.8 14.5 23.2 L18 27 L19 9 C19 5.2 24.5 5.2 24.5 9 L24.5 25 C25 22.5 29 22 29.8 24.8 C30.5 23 34.5 23 35.2 25.5 C36 24 39.8 24.2 40 27.5 L40 35 C40 41 37 45 35 47 L36.5 56 C36.5 58 17.5 58 17.5 56 Z"
+            fill="#f2766a" stroke="#a8392f" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M25 26 L25 32 M30 26 L30 32 M35 27 L35 32" fill="none" stroke="#a8392f" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M17.5 49 C23 50 30 50 35.5 49" fill="none" stroke="#a8392f" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <!-- Grabbing fist -->
+    <g class="g-state g-grab">
+      <path d="M16 46 L15 31 C15 24 19 20 22 20 C23.5 18.5 27 18.5 28.5 20 C30 18.5 33.5 18.5 35 20 C37.5 20 41 22 41 27 L41 35 C41 40 38 44 36 46 L37.5 56 C37.5 58 16.5 58 16.5 56 Z"
+            fill="#f2766a" stroke="#a8392f" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M22 21 L22 30 M28.5 21 L28.5 30 M35 21 L35 30" fill="none" stroke="#a8392f" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M15.5 34 C19 30 27 31 30 35 C27 38 19 38 15.5 34 Z" fill="#f2766a" stroke="#a8392f" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M17 48 C23 49 30 49 36 48" fill="none" stroke="#a8392f" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </svg>
+
+  <script>
+    (() => {
+      const CDN = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/';
+      const H = (file, w) => 'https://images.higgs.ai/?default=1&output=webp&url=' + encodeURIComponent(CDN + file) + '&w=' + w + '&q=86';
+
+      const SHEETS = {
+        bg:  'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042539_bee90308-05ef-4b87-a91f-6b86c7e02f94.png&w=2400&q=86',
+        tr:  'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042539_ad6880ac-f262-4716-90ed-24c287232feb.png&w=1500&q=86',
+        pl:  'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042538_7987a8aa-885b-4db2-a664-50e7ee9fb13f.png&w=1500&q=86',
+        bw:  'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042538_efc215bc-128e-481e-a1e2-3d026dd6ab81.png&w=1500&q=86',
+        bt:  'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042538_a703fa03-9bb4-49d9-be23-1bde093c65c4.png&w=1500&q=86',
+        sd:  'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042538_c8c2be5c-8263-42df-b8b8-08a5f89d3532.png&w=1500&q=86',
+        bxo: 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042538_bdab28e0-83c2-48fc-8f65-12d376fddcaf.png&w=1500&q=86',
+        bxc: 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261114_042539_7e258e75-50d8-422c-8395-8506fa6fa210.png&w=1500&q=86'
+      };
+
+      const BOXES = {
+        emptyBowl: [168, 245, 930, 1140],
+        riceBowl:  [1110, 247, 1866, 1143],
+        openBox:   [259, 141, 1879, 1216],
+        closedBox: [247, 136, 1901, 1261]
+      };
+
+      const INGREDIENTS = [
+        { key: 'rice',     name: 'Sushi rice',    emoji: '🍚', price: 8.00, priceLabel: '$8.00',  group: 'base',    pan: [1539, 687, 2020, 1204], pl: [1569, 742, 2000, 1207], col: 0, row: 0 },
+        { key: 'salmon',   name: 'Salmon',        emoji: '🐟', price: 3.00, priceLabel: '+$3.00', group: 'protein', pan: [51, 149, 511, 638],    pl: [48, 185, 490, 647],    col: 1, row: 0 },
+        { key: 'tuna',     name: 'Tuna',          emoji: '🍣', price: 3.00, priceLabel: '+$3.00', group: 'protein', pan: [542, 146, 1009, 632],  pl: [564, 187, 1006, 641],  col: 0, row: 1 },
+        { key: 'avocado',  name: 'Avocado',       emoji: '🥑', price: 1.00, priceLabel: '+$1.00', group: 'topping', pan: [1043, 150, 1535, 629], pl: [1075, 197, 1501, 656], col: 1, row: 1 },
+        { key: 'edamame',  name: 'Edamame',       emoji: '🫛', price: 0.75, priceLabel: '+$0.75', group: 'topping', pan: [1536, 149, 1998, 631], pl: [1548, 193, 1982, 646], col: 0, row: 2 },
+        { key: 'cucumber', name: 'Cucumber',      emoji: '🥒', price: 0.75, priceLabel: '+$0.75', group: 'topping', pan: [33, 687, 508, 1203],   pl: [45, 740, 497, 1214],   col: 1, row: 2 },
+        { key: 'mango',    name: 'Mango',         emoji: '🥭', price: 1.00, priceLabel: '+$1.00', group: 'topping', pan: [535, 689, 1009, 1201], pl: [557, 744, 992, 1214],  col: 0, row: 3 },
+        { key: 'seaweed',  name: 'Seaweed salad', emoji: '🥬', price: 0.75, priceLabel: '+$0.75', group: 'topping', pan: [1044, 687, 1519, 1198],pl: [1057, 740, 1501, 1217],col: 1, row: 3 }
+      ];
+
+      const BOTTLES = [
+        { key: 'shoyu',      name: 'Shoyu',      color: '#3a1c0e', priceLabel: '$0.00', x: 31, box: [302, 104, 691, 1222] },
+        { key: 'spicy_mayo', name: 'Spicy mayo', color: '#ee8a3a', priceLabel: '$0.00', x: 38, box: [826, 102, 1222, 1221] },
+        { key: 'ponzu',      name: 'Ponzu',      color: '#e9dcae', priceLabel: '$0.00', x: 45, box: [1354, 107, 1746, 1218] }
+      ];
+
+      const SIDES = [
+        { key: 'miso',     name: 'Miso soup',      price: 2.50, priceLabel: '$2.50', top: 8.2,  box: [26, 323, 619, 1033] },
+        { key: 'gyoza',    name: 'Gyoza',          price: 4.00, priceLabel: '$4.00', top: 21.8, box: [628, 447, 1458, 1037] },
+        { key: 'crackers', name: 'Prawn crackers', price: 3.50, priceLabel: '$3.50', top: 35.4, box: [1457, 304, 2036, 1048] }
+      ];
+
+      const PAN_X = [2.4, 12.4];
+      const PAN_Y = [11.8, 21.4, 31.0, 40.6];
+
+      const PICKUP_LOCATIONS = [
+        'Poke Pal — Harbor Pier 14',
+        'Poke Pal — Coral Market St'
+      ];
+      const DELIVERY_ADDRESSES = [
+        '412 Oceanview Ave, Apt 3B',
+        '88 Driftwood Lane, Suite 2'
+      ];
+
+      // Preload sheets
+      Object.values(SHEETS).forEach(src => { const i = new Image(); i.src = src; });
+
+      // Sprite sizing helper in u units
+      function applySpriteU(el, sheetUrl, box, spaceW_u, spaceH_u) {
+        const [x0, y0, x1, y1] = box;
+        const bw = x1 - x0;
+        const bh = y1 - y0;
+        const k = Math.min(spaceW_u / bw, spaceH_u / bh);
+        const w = bw * k;
+        const h = bh * k;
+        const ml = (spaceW_u - w) / 2;
+        const mt = (spaceH_u - h) / 2;
+        el.classList.add('sprite');
+        el.style.width = `calc(${w} * var(--u))`;
+        el.style.height = `calc(${h} * var(--u))`;
+        el.style.marginLeft = `calc(${ml} * var(--u))`;
+        el.style.marginTop = `calc(${mt} * var(--u))`;
+        el.style.backgroundImage = `url('${sheetUrl}')`;
+        el.style.backgroundSize = `calc(${2048 * k} * var(--u)) calc(${1360 * k} * var(--u))`;
+        el.style.backgroundPosition = `calc(${-x0 * k} * var(--u)) calc(${-y0 * k} * var(--u))`;
+        return { w, h, ml, mt, k };
+      }
+
+      // Compute exact u unit in px
+      function getU() {
+        return Math.min(window.innerWidth, 1.7778 * window.innerHeight) / 100;
+      }
+
+      // DOM refs
+      const closedBoxEl = document.getElementById('closed-box');
+      const openBtn = document.getElementById('open-btn');
+      const howBtn = document.getElementById('how-btn');
+      const howPopover = document.getElementById('how-popover');
+      const pansLayer = document.getElementById('pans-layer');
+      const bottlesLayer = document.getElementById('bottles-layer');
+      const sidesLayer = document.getElementById('sides-layer');
+      const openBoxEl = document.getElementById('open-box');
+      const boxSpriteEl = document.getElementById('box-sprite');
+      const bowlEl = document.getElementById('bowl');
+      const bowlEmptyEl = document.getElementById('bowl-empty');
+      const bowlRiceEl = document.getElementById('bowl-rice');
+      const pilesEl = document.getElementById('piles');
+      const sauceCanvas = document.getElementById('sauce-canvas');
+      const garnishCanvas = document.getElementById('garnish-canvas');
+      const sideCompEl = document.getElementById('side-comp');
+      const menuCardEl = document.getElementById('menu-card');
+      const placedSideEl = document.getElementById('placed-side');
+      const toastEl = document.getElementById('toast');
+      const barTotalEl = document.getElementById('bar-total');
+      const topOffBtn = document.getElementById('top-off-btn');
+      const undoBtn = document.getElementById('undo-btn');
+      const receiptEl = document.getElementById('receipt');
+      const rcpLinesEl = document.getElementById('rcp-lines');
+      const rcpTotalEl = document.getElementById('rcp-total');
+      const checkoutOpenBtn = document.getElementById('checkout-open-btn');
+      const backBuildingBtn = document.getElementById('back-building-btn');
+      const checkoutOverlay = document.getElementById('checkout-overlay');
+      const checkoutCard = document.getElementById('checkout-card');
+      const coNameInput = document.getElementById('co-name');
+      const coPhoneInput = document.getElementById('co-phone');
+      const coPlaceLabel = document.getElementById('co-place-label');
+      const coPlaceSelect = document.getElementById('co-place');
+      const coTotalEl = document.getElementById('co-total');
+      const placeOrderBtn = document.getElementById('place-order-btn');
+      const coCancelBtn = document.getElementById('co-cancel-btn');
+      const anotherBtn = document.getElementById('another-btn');
+      const heldEl = document.getElementById('held');
+      const gloveEl = document.getElementById('glove');
+
+      // Build static sprites
+      const closedSprite = document.createElement('div');
+      applySpriteU(closedSprite, SHEETS.bxc, BOXES.closedBox, 38, 30);
+      closedBoxEl.appendChild(closedSprite);
+
+      // Open box geometry (42u x 28u)
+      const boxMetrics = applySpriteU(boxSpriteEl, SHEETS.bxo, BOXES.openBox, 42, 28);
+      const bx0 = BOXES.openBox[0], by0 = BOXES.openBox[1], bk = boxMetrics.k;
+      const compLeft = {
+        left: boxMetrics.ml + (330 - bx0) * bk,
+        top:  boxMetrics.mt + (223 - by0) * bk,
+        w:    (1249 - 330) * bk,
+        h:    (968 - 223) * bk
+      };
+      const compRight = {
+        left: boxMetrics.ml + (1274 - bx0) * bk,
+        top:  boxMetrics.mt + (337 - by0) * bk,
+        w:    (1757 - 1274) * bk,
+        h:    (866 - 337) * bk
+      };
+
+      // Bowl sized to 98% of left compartment height, centred in it
+      const emptyW = BOXES.emptyBowl[2] - BOXES.emptyBowl[0];
+      const emptyH = BOXES.emptyBowl[3] - BOXES.emptyBowl[1];
+      const bowlH = compLeft.h * 0.98;
+      const bowlW = bowlH * (emptyW / emptyH);
+      const bowlLeft = compLeft.left + (compLeft.w - bowlW) / 2;
+      const bowlTop = compLeft.top + (compLeft.h - bowlH) / 2;
+
+      bowlEl.style.left = `calc(${bowlLeft} * var(--u))`;
+      bowlEl.style.top = `calc(${bowlTop} * var(--u))`;
+      bowlEl.style.width = `calc(${bowlW} * var(--u))`;
+      bowlEl.style.height = `calc(${bowlH} * var(--u))`;
+
+      applySpriteU(bowlEmptyEl, SHEETS.bw, BOXES.emptyBowl, bowlW, bowlH);
+      applySpriteU(bowlRiceEl, SHEETS.bw, BOXES.riceBowl, bowlW, bowlH);
+
+      // Right compartment positioning
+      sideCompEl.style.left = `calc(${compRight.left} * var(--u))`;
+      sideCompEl.style.top = `calc(${compRight.top} * var(--u))`;
+      sideCompEl.style.width = `calc(${compRight.w} * var(--u))`;
+      sideCompEl.style.height = `calc(${compRight.h} * var(--u))`;
+
+      // Canvas backing size
+      const CANVAS_W = 640;
+      const CANVAS_H = Math.round(CANVAS_W * (bowlH / bowlW));
+      sauceCanvas.width = CANVAS_W;
+      sauceCanvas.height = CANVAS_H;
+      garnishCanvas.width = CANVAS_W;
+      garnishCanvas.height = CANVAS_H;
+
+      // Build pans
+      const panElements = {};
+      INGREDIENTS.forEach((ing, idx) => {
+        const slot = document.createElement('div');
+        slot.className = 'pan-slot builder-item';
+        slot.dataset.key = ing.key;
+        slot.dataset.interactive = 'true';
+        slot.style.left = `calc(${PAN_X[ing.col]} * var(--u))`;
+        slot.style.top = `calc(${PAN_Y[ing.row]} * var(--u))`;
+        slot.style.setProperty('--i', idx);
+
+        const vis = document.createElement('div');
+        vis.className = 'pan-visual';
+        const spr = document.createElement('div');
+        applySpriteU(spr, SHEETS.tr, ing.pan, 9.2, 9.4);
+        vis.appendChild(spr);
+
+        const tag = document.createElement('div');
+        tag.className = 'pan-tag';
+        tag.innerHTML = `<span class="pan-emoji">${ing.emoji}</span><span>${ing.name}</span><span class="pan-price">${ing.priceLabel}</span>`;
+
+        slot.appendChild(vis);
+        slot.appendChild(tag);
+        pansLayer.appendChild(slot);
+        panElements[ing.key] = slot;
+      });
+
+      // Build bottles
+      const bottleElements = {};
+      BOTTLES.forEach((b, idx) => {
+        const slot = document.createElement('div');
+        slot.className = 'bottle-slot builder-item';
+        slot.dataset.key = b.key;
+        slot.dataset.interactive = 'true';
+        slot.style.left = `calc(${b.x} * var(--u))`;
+        slot.style.setProperty('--i', 5 + idx);
+
+        const vis = document.createElement('div');
+        vis.className = 'bottle-visual';
+        const spr = document.createElement('div');
+        applySpriteU(spr, SHEETS.bt, b.box, 5.6, 16);
+        vis.appendChild(spr);
+
+        const tag = document.createElement('div');
+        tag.className = 'bottle-tag';
+        tag.textContent = `${b.name} ${b.priceLabel}`;
+
+        slot.appendChild(vis);
+        slot.appendChild(tag);
+        bottlesLayer.appendChild(slot);
+        bottleElements[b.key] = slot;
+      });
+
+      // Build sides
+      const sideElements = {};
+      SIDES.forEach((s, idx) => {
+        const slot = document.createElement('div');
+        slot.className = 'side-slot builder-item';
+        slot.dataset.key = s.key;
+        slot.dataset.interactive = 'true';
+        slot.style.top = `calc(${s.top} * var(--u))`;
+        slot.style.setProperty('--i', 9 + idx);
+
+        const vis = document.createElement('div');
+        vis.className = 'side-visual';
+        const spr = document.createElement('div');
+        applySpriteU(spr, SHEETS.sd, s.box, 11, 12.4);
+        vis.appendChild(spr);
+
+        const tag = document.createElement('div');
+        tag.className = 'side-tag';
+        tag.textContent = `${s.name} ${s.priceLabel}`;
+
+        slot.appendChild(vis);
+        slot.appendChild(tag);
+        sidesLayer.appendChild(slot);
+        sideElements[s.key] = slot;
+      });
+
+      // Application state
+      let state = {
+        hasRice: false,
+        piles: [],   // { id, key, nx, ny }
+        sauces: [],  // { key, points: [{x, y}] }
+        side: null,  // key | null
+        topped: false,
+        fulfill: 'pickup'
+      };
+      let undoStack = [];
+      let nextPileId = 1;
+      let toastTimer = null;
+      let receiptTimer = null;
+      let receiptLineTimers = [];
+      let garnishRaf = null;
+      let garnishPieces = [];
+
+      // Held & pointer state
+      let pointer = { x: window.innerWidth / 2, y: window.innerHeight / 2, down: false };
+      let held = null; // { type: 'ing'|'bottle'|'side', key, startX, startY, moved, fromClick, drawing, activePoints, sizeW, sizeH, rot }
+      let displayedTotal = 0;
+      let displayedRcpTotal = 0;
+      let totalAnimRaf = null;
+      let rcpTotalAnimRaf = null;
+
+      function cloneState(s) {
+        return {
+          hasRice: s.hasRice,
+          piles: s.piles.map(p => ({ ...p })),
+          sauces: s.sauces.map(sc => ({ key: sc.key, points: sc.points.map(pt => ({ ...pt })) })),
+          side: s.side,
+          topped: s.topped,
+          fulfill: s.fulfill
+        };
+      }
+
+      function pushUndo() {
+        undoStack.push(cloneState(state));
+        if (undoStack.length > 40) undoStack.shift();
+      }
+
+      function showToast(msg) {
+        clearTimeout(toastTimer);
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        toastTimer = setTimeout(() => {
+          toastEl.classList.remove('show');
+        }, 1600);
+      }
+
+      function computeTotal(includeDelivery = false) {
+        let sum = state.hasRice ? 8.00 : 0;
+        for (const p of state.piles) {
+          const ing = INGREDIENTS.find(i => i.key === p.key);
+          if (ing) sum += ing.price;
+        }
+        if (state.side) {
+          const sd = SIDES.find(s => s.key === state.side);
+          if (sd) sum += sd.price;
+        }
+        if (includeDelivery && state.fulfill === 'delivery') sum += 4.00;
+        return sum;
+      }
+
+      function animateNumber(el, fromVal, toVal, setter, rafRefGetter, rafRefSetter) {
+        cancelAnimationFrame(rafRefGetter());
+        const start = performance.now();
+        const dur = 450;
+        function tick(now) {
+          const t = Math.min(1, (now - start) / dur);
+          const ease = 1 - Math.pow(1 - t, 3);
+          const cur = fromVal + (toVal - fromVal) * ease;
+          setter(cur);
+          el.textContent = '$' + cur.toFixed(2);
+          if (t < 1) {
+            rafRefSetter(requestAnimationFrame(tick));
+          } else {
+            setter(toVal);
+            el.textContent = '$' + toVal.toFixed(2);
+          }
+        }
+        rafRefSetter(requestAnimationFrame(tick));
+      }
+
+      // Intro open
+      function openBuilder() {
+        if (document.body.classList.contains('open')) return;
+        document.body.classList.add('open');
+        showToast('Grab some sushi rice to start.');
+        setTimeout(() => {
+          document.querySelectorAll('.builder-item').forEach(el => el.classList.add('settled'));
+        }, 1250);
+      }
+      closedBoxEl.addEventListener('click', openBuilder);
+      openBtn.addEventListener('click', openBuilder);
+
+      // How it works popover
+      function toggleHow(force) {
+        const next = typeof force === 'boolean' ? force : !howPopover.classList.contains('show');
+        howPopover.classList.toggle('show', next);
+        howBtn.setAttribute('aria-expanded', String(next));
+      }
+      howBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleHow();
+      });
+      document.addEventListener('pointerdown', (e) => {
+        if (howPopover.classList.contains('show') && !howPopover.contains(e.target) && !howBtn.contains(e.target)) {
+          toggleHow(false);
+        }
+      });
+
+      // Nav links
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const nav = link.dataset.nav;
+          if (nav === 'help') {
+            toggleHow();
+            return;
+          }
+          if (!document.body.classList.contains('open')) {
+            openBuilder();
+          }
+          if (nav === 'drinks') {
+            showToast('Cold drinks coming soon.');
+          } else if (nav === 'sides') {
+            showToast('Drag a side into the box.');
+          } else if (nav === 'bowls') {
+            showToast(state.hasRice ? 'Keep stacking toppings!' : 'Grab some sushi rice to start.');
+          } else if (nav === 'menu') {
+            showToast('Pick fresh ingredients from the pans.');
+          }
+        });
+      });
+
+      // Sauce canvas rendering
+      function drawStroke(ctx, stroke) {
+        const pts = stroke.points;
+        if (pts.length < 2) return;
+        const bottle = BOTTLES.find(b => b.key === stroke.key);
+        if (!bottle) return;
+        const w = ctx.canvas.width;
+        const h = ctx.canvas.height;
+        const lineW = 0.042 * w;
+
+        const tracePath = (ox, oy) => {
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x * w + ox, pts[0].y * h + oy);
+          for (let i = 1; i < pts.length - 1; i++) {
+            const mx = ((pts[i].x + pts[i + 1].x) * 0.5) * w + ox;
+            const my = ((pts[i].y + pts[i + 1].y) * 0.5) * h + oy;
+            ctx.quadraticCurveTo(pts[i].x * w + ox, pts[i].y * h + oy, mx, my);
+          }
+          const last = pts[pts.length - 1];
+          ctx.lineTo(last.x * w + ox, last.y * h + oy);
+        };
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(0.5 * w, 0.375 * h, 0.43 * w, 0.31 * h, 0, 0, Math.PI * 2);
+        ctx.clip();
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // 1. Dark under-stroke
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.lineWidth = lineW * 1.18;
+        tracePath(0.004 * w, 0.006 * w);
+        ctx.stroke();
+
+        // 2. Main colour stroke at 4.2% of canvas width
+        ctx.strokeStyle = bottle.color;
+        ctx.lineWidth = lineW;
+        tracePath(0, 0);
+        ctx.stroke();
+
+        // 3. Light highlight stroke offset up-left
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.42)';
+        ctx.lineWidth = lineW * 0.32;
+        tracePath(-0.007 * w, -0.007 * w);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function redrawSauces(activeStroke = null) {
+        const ctx = sauceCanvas.getContext('2d');
+        ctx.clearRect(0, 0, sauceCanvas.width, sauceCanvas.height);
+        for (const s of state.sauces) drawStroke(ctx, s);
+        if (activeStroke) drawStroke(ctx, activeStroke);
+      }
+
+      // Garnish rain (~90 pieces)
+      function startGarnishRain() {
+        cancelAnimationFrame(garnishRaf);
+        const types = ['sesame', 'nori', 'scallion'];
+        garnishPieces = [];
+        const count = 90;
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const rad = Math.sqrt(Math.random()) * 0.82;
+          const x = 0.5 + 0.43 * rad * Math.cos(angle);
+          const y = 0.375 + 0.31 * rad * Math.sin(angle);
+          const type = types[i % 3];
+          garnishPieces.push({
+            x, y,
+            type,
+            rot: Math.random() * Math.PI * 2,
+            delay: Math.random() * 380,
+            dur: 420 + Math.random() * 240,
+            scale: 0.8 + Math.random() * 0.45
+          });
+        }
+        const t0 = performance.now();
+        function frame(now) {
+          const elapsed = now - t0;
+          const ctx = garnishCanvas.getContext('2d');
+          const w = garnishCanvas.width;
+          const h = garnishCanvas.height;
+          ctx.clearRect(0, 0, w, h);
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.ellipse(0.5 * w, 0.375 * h, 0.43 * w, 0.31 * h, 0, 0, Math.PI * 2);
+          ctx.clip();
+
+          let allDone = true;
+          for (const g of garnishPieces) {
+            const p = (elapsed - g.delay) / g.dur;
+            if (p < 0) { allDone = false; continue; }
+            const cl = Math.min(1, p);
+            if (cl < 1) allDone = false;
+            const ease = 1 - Math.pow(1 - cl, 2.6);
+            const dropY = (1 - ease) * (-0.55 * h);
+            const px = g.x * w;
+            const py = g.y * h + dropY;
+
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(g.rot + (1 - ease) * 1.4);
+            ctx.scale(g.scale, g.scale);
+            ctx.globalAlpha = Math.min(1, cl * 2.5);
+
+            if (g.type === 'sesame') {
+              ctx.fillStyle = '#fff3d6';
+              ctx.strokeStyle = 'rgba(130, 95, 45, 0.45)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.ellipse(0, 0, 4.2, 2.3, 0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            } else if (g.type === 'nori') {
+              ctx.fillStyle = '#162519';
+              ctx.fillRect(-7, -2.2, 14, 4.4);
+            } else {
+              ctx.fillStyle = '#53b848';
+              ctx.beginPath();
+              ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#d9f5c8';
+              ctx.beginPath();
+              ctx.arc(0, 0, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+          ctx.restore();
+
+          if (!allDone) {
+            garnishRaf = requestAnimationFrame(frame);
+          }
+        }
+        garnishRaf = requestAnimationFrame(frame);
+      }
+
+      function clearGarnish() {
+        cancelAnimationFrame(garnishRaf);
+        garnishPieces = [];
+        const ctx = garnishCanvas.getContext('2d');
+        ctx.clearRect(0, 0, garnishCanvas.width, garnishCanvas.height);
+      }
+
+      // Render piles inside bowl
+      function renderPiles(animatePileId = null) {
+        pilesEl.innerHTML = '';
+        const sorted = [...state.piles].sort((a, b) => a.ny - b.ny);
+        const pileSizeU = bowlW * 0.42;
+
+        for (const p of sorted) {
+          const ing = INGREDIENTS.find(i => i.key === p.key);
+          if (!ing) continue;
+          const wrap = document.createElement('div');
+          wrap.className = 'pile';
+          if (p.id === animatePileId) wrap.classList.add('dropping');
+          wrap.dataset.pileId = String(p.id);
+          wrap.dataset.interactive = 'true';
+
+          const leftFrac = 0.5 + 0.43 * p.nx;
+          const topFrac = 0.375 + 0.31 * p.ny;
+          wrap.style.left = (leftFrac * 100) + '%';
+          wrap.style.top = (topFrac * 100) + '%';
+          wrap.style.width = `calc(${pileSizeU} * var(--u))`;
+          wrap.style.height = `calc(${pileSizeU} * var(--u))`;
+          wrap.style.zIndex = String(Math.round(20 + (p.ny + 1) * 50));
+
+          const spr = document.createElement('div');
+          applySpriteU(spr, SHEETS.pl, ing.pl, pileSizeU, pileSizeU);
+          wrap.appendChild(spr);
+
+          wrap.addEventListener('pointerdown', (e) => {
+            if (held || state.topped) return;
+            e.stopPropagation();
+            removePile(p.id, wrap.getBoundingClientRect());
+          });
+
+          pilesEl.appendChild(wrap);
+        }
+      }
+
+      function removePile(pileId, rect) {
+        const pile = state.piles.find(p => p.id === pileId);
+        if (!pile) return;
+        const ing = INGREDIENTS.find(i => i.key === pile.key);
+        pushUndo();
+        state.piles = state.piles.filter(p => p.id !== pileId);
+        syncUI();
+        if (ing && rect) {
+          const targetRect = panElements[ing.key].getBoundingClientRect();
+          flySprite(SHEETS.pl, ing.pl, bowlW * 0.42, bowlW * 0.42, rect.left + rect.width / 2, rect.top + rect.height / 2, 0, targetRect, 0);
+        }
+        showToast(`${ing.name} removed.`);
+      }
+
+      // Render side in right compartment
+      function renderPlacedSide(animate = false) {
+        placedSideEl.innerHTML = '';
+        if (state.side) {
+          menuCardEl.classList.add('away');
+          const sd = SIDES.find(s => s.key === state.side);
+          if (sd) {
+            const spr = document.createElement('div');
+            applySpriteU(spr, SHEETS.sd, sd.box, compRight.w, compRight.h);
+            placedSideEl.appendChild(spr);
+            if (animate) {
+              placedSideEl.classList.remove('bounce');
+              void placedSideEl.offsetWidth;
+              placedSideEl.classList.add('bounce');
+            }
+          }
+        } else {
+          menuCardEl.classList.remove('away');
+        }
+        SIDES.forEach(s => {
+          sideElements[s.key].classList.toggle('in-box', state.side === s.key);
+        });
+      }
+
+      // Receipt printer
+      function clearReceiptTimers() {
+        clearTimeout(receiptTimer);
+        receiptLineTimers.forEach(t => clearTimeout(t));
+        receiptLineTimers = [];
+      }
+
+      function buildReceiptLines() {
+        const lines = [];
+        if (state.hasRice) lines.push({ label: 'Sushi rice', val: '$8.00' });
+        for (const p of state.piles) {
+          const ing = INGREDIENTS.find(i => i.key === p.key);
+          if (ing) lines.push({ label: ing.name, val: '$' + ing.price.toFixed(2) });
+        }
+        const usedSauces = [...new Set(state.sauces.map(s => s.key))];
+        for (const sk of usedSauces) {
+          const b = BOTTLES.find(x => x.key === sk);
+          if (b) lines.push({ label: b.name, val: 'ON US' });
+        }
+        if (state.side) {
+          const sd = SIDES.find(s => s.key === state.side);
+          if (sd) lines.push({ label: sd.name, val: '$' + sd.price.toFixed(2) });
+        }
+        return lines;
+      }
+
+      function openReceipt(immediate = false) {
+        clearReceiptTimers();
+        rcpLinesEl.innerHTML = '';
+        const lines = buildReceiptLines();
+        const lineEls = lines.map(l => {
+          const row = document.createElement('div');
+          row.className = 'rcp-line';
+          row.innerHTML = `<span>${l.label}</span><span>${l.val}</span>`;
+          rcpLinesEl.appendChild(row);
+          return row;
+        });
+
+        receiptEl.classList.add('show');
+        if (immediate) {
+          lineEls.forEach(el => el.classList.add('in'));
+          const t = computeTotal(true);
+          displayedRcpTotal = t;
+          rcpTotalEl.textContent = '$' + t.toFixed(2);
+        } else {
+          displayedRcpTotal = 0;
+          rcpTotalEl.textContent = '$0.00';
+          lineEls.forEach((el, idx) => {
+            receiptLineTimers.push(setTimeout(() => {
+              el.classList.add('in');
+            }, (idx + 1) * 110));
+          });
+          const totalDelay = Math.max(110, lineEls.length * 110);
+          receiptLineTimers.push(setTimeout(() => {
+            animateNumber(
+              rcpTotalEl,
+              0,
+              computeTotal(true),
+              v => { displayedRcpTotal = v; },
+              () => rcpTotalAnimRaf,
+              id => { rcpTotalAnimRaf = id; }
+            );
+          }, totalDelay));
+        }
+      }
+
+      function closeReceipt() {
+        clearReceiptTimers();
+        receiptEl.classList.remove('show');
+      }
+
+      // Sync full UI with state
+      function syncUI(opts = {}) {
+        bowlEl.classList.toggle('has-rice', state.hasRice);
+
+        // Pan tags
+        const usedIngs = new Set(state.piles.map(p => p.key));
+        if (state.hasRice) usedIngs.add('rice');
+        INGREDIENTS.forEach(ing => {
+          panElements[ing.key].classList.toggle('used', usedIngs.has(ing.key));
+        });
+
+        // Bottle tags
+        const usedSauces = new Set(state.sauces.map(s => s.key));
+        BOTTLES.forEach(b => {
+          bottleElements[b.key].classList.toggle('used', usedSauces.has(b.key));
+        });
+
+        // Piles & sauces
+        renderPiles(opts.animatePileId || null);
+        redrawSauces();
+        renderPlacedSide(Boolean(opts.animateSide));
+
+        // Steps
+        const hasProtein = state.piles.some(p => {
+          const ing = INGREDIENTS.find(i => i.key === p.key);
+          return ing && ing.group === 'protein';
+        });
+        const hasTopping = state.piles.some(p => {
+          const ing = INGREDIENTS.find(i => i.key === p.key);
+          return ing && ing.group === 'topping';
+        });
+        const hasSauce = state.sauces.length > 0;
+
+        const doneMap = {
+          1: state.hasRice,
+          2: hasProtein,
+          3: hasTopping,
+          4: hasSauce
+        };
+        let currentStep = null;
+        for (let i = 1; i <= 4; i++) {
+          if (!doneMap[i]) { currentStep = i; break; }
+        }
+        document.querySelectorAll('.step').forEach(el => {
+          const num = Number(el.dataset.step);
+          const done = doneMap[num];
+          el.classList.toggle('done', done);
+          el.classList.toggle('current', num === currentStep);
+          el.querySelector('.step-ring').textContent = done ? '✓' : String(num);
+        });
+
+        // Totals & buttons
+        const newTotal = computeTotal(false);
+        if (Math.abs(newTotal - displayedTotal) > 0.001) {
+          animateNumber(
+            barTotalEl,
+            displayedTotal,
+            newTotal,
+            v => { displayedTotal = v; },
+            () => totalAnimRaf,
+            id => { totalAnimRaf = id; }
+          );
+        } else {
+          barTotalEl.textContent = '$' + newTotal.toFixed(2);
+        }
+
+        topOffBtn.disabled = !(state.hasRice && state.piles.length > 0) || state.topped;
+        undoBtn.disabled = undoStack.length === 0;
+
+        // Radio sync
+        document.querySelectorAll('input[name="fulfill"]').forEach(r => {
+          r.checked = r.value === state.fulfill;
+        });
+
+        if (!state.topped) {
+          clearGarnish();
+          closeReceipt();
+        }
+      }
+
+      // Fly-back helper
+      function flySprite(sheetUrl, box, sizeW_u, sizeH_u, fromCenterX, fromCenterY, fromRotDeg, targetRect, toRotDeg) {
+        const u = getU();
+        const clone = document.createElement('div');
+        clone.className = 'fly-clone';
+        const wPx = sizeW_u * u;
+        const hPx = sizeH_u * u;
+        clone.style.width = wPx + 'px';
+        clone.style.height = hPx + 'px';
+        clone.style.left = (fromCenterX - wPx / 2) + 'px';
+        clone.style.top = (fromCenterY - hPx / 2) + 'px';
+        const inner = document.createElement('div');
+        applySpriteU(inner, sheetUrl, box, sizeW_u, sizeH_u);
+        clone.appendChild(inner);
+        clone.style.transform = `rotate(${fromRotDeg}deg)`;
+        document.body.appendChild(clone);
+
+        const toCenterX = targetRect.left + targetRect.width / 2;
+        const toCenterY = targetRect.top + targetRect.height / 2;
+        const dx = toCenterX - fromCenterX;
+        const dy = toCenterY - fromCenterY;
+
+        requestAnimationFrame(() => {
+          clone.style.transition = 'transform 0.42s cubic-bezier(0.34, 1.45, 0.64, 1), opacity 0.35s ease';
+          clone.style.transform = `translate(${dx}px, ${dy}px) rotate(${toRotDeg}deg) scale(0.95)`;
+        });
+        setTimeout(() => {
+          clone.style.opacity = '0';
+        }, 300);
+        setTimeout(() => {
+          clone.remove();
+        }, 460);
+      }
+
+      // Hit testing helpers
+      function getBowlNormalized(clientX, clientY) {
+        const r = bowlEl.getBoundingClientRect();
+        const nx = (clientX - r.left - 0.5 * r.width) / (0.43 * r.width);
+        const ny = (clientY - r.top - 0.375 * r.height) / (0.31 * r.height);
+        return { nx, ny, dist: Math.hypot(nx, ny), rect: r };
+      }
+
+      function isOverSideComp(clientX, clientY) {
+        const r = sideCompEl.getBoundingClientRect();
+        const pad = 16;
+        return clientX >= r.left - pad && clientX <= r.right + pad && clientY >= r.top - pad && clientY <= r.bottom + pad;
+      }
+
+      // Held rendering & positioning
+      function setHeldVisual(type, key) {
+        heldEl.innerHTML = '';
+        let sizeW, sizeH, rot, sheet, box;
+        if (type === 'ing') {
+          const ing = INGREDIENTS.find(i => i.key === key);
+          sizeW = bowlW * 0.38;
+          sizeH = bowlW * 0.38;
+          rot = -8;
+          sheet = SHEETS.pl;
+          box = ing.pl;
+        } else if (type === 'side') {
+          const sd = SIDES.find(s => s.key === key);
+          sizeW = 11 * 0.8;
+          sizeH = 12.4 * 0.8;
+          rot = 0;
+          sheet = SHEETS.sd;
+          box = sd.box;
+        } else if (type === 'bottle') {
+          const bt = BOTTLES.find(b => b.key === key);
+          sizeW = 5.6;
+          sizeH = 16;
+          rot = -130;
+          sheet = SHEETS.bt;
+          box = bt.box;
+        }
+        const u = getU();
+        heldEl.style.width = (sizeW * u) + 'px';
+        heldEl.style.height = (sizeH * u) + 'px';
+        const spr = document.createElement('div');
+        applySpriteU(spr, sheet, box, sizeW, sizeH);
+        heldEl.appendChild(spr);
+        heldEl.classList.add('active');
+        return { sizeW, sizeH, rot, sheet, box };
+      }
+
+      function positionHeld(clientX, clientY) {
+        if (!held) return;
+        const u = getU();
+        const wPx = held.sizeW * u;
+        const hPx = held.sizeH * u;
+        const rot = held.drawing ? -158 : held.rot;
+        if (held.type === 'bottle') {
+          // Offset bottle body so the tipped cap points near cursor
+          const offX = held.drawing ? 0.15 * wPx : 0.05 * wPx;
+          const offY = held.drawing ? -0.45 * hPx : -0.35 * hPx;
+          heldEl.style.left = (clientX - wPx / 2 + offX) + 'px';
+          heldEl.style.top = (clientY - hPx / 2 + offY) + 'px';
+        } else {
+          heldEl.style.left = (clientX - wPx / 2) + 'px';
+          heldEl.style.top = (clientY - hPx / 2 + 10) + 'px';
+        }
+        heldEl.style.transform = `rotate(${rot}deg)`;
+      }
+
+      function clearHeld() {
+        if (!held) return;
+        if (held.type === 'bottle') {
+          bottleElements[held.key].classList.remove('carrying');
+        }
+        held = null;
+        heldEl.classList.remove('active');
+        heldEl.innerHTML = '';
+        bowlEl.classList.remove('glow');
+        sideCompEl.classList.remove('glow');
+        updateGloveState();
+      }
+
+      function cancelHeldWithFly() {
+        if (!held) return;
+        const cur = held;
+        let targetEl;
+        if (cur.type === 'ing') targetEl = panElements[cur.key];
+        else if (cur.type === 'bottle') targetEl = bottleElements[cur.key];
+        else targetEl = sideElements[cur.key];
+        const targetRect = targetEl.getBoundingClientRect();
+        const fromRot = cur.drawing ? -158 : cur.rot;
+        clearHeld();
+        flySprite(cur.sheet, cur.box, cur.sizeW, cur.sizeH, pointer.x, pointer.y, fromRot, targetRect, 0);
+      }
+
+      // Drop ingredient into bowl
+      function dropIngredient(key, clientX, clientY) {
+        const ing = INGREDIENTS.find(i => i.key === key);
+        const norm = getBowlNormalized(clientX, clientY);
+        const targetRect = panElements[key].getBoundingClientRect();
+
+        if (norm.dist > 1.35) {
+          flySprite(SHEETS.pl, ing.pl, bowlW * 0.38, bowlW * 0.38, clientX, clientY, -8, targetRect, 0);
+          return;
+        }
+
+        if (key === 'rice') {
+          if (state.hasRice) {
+            showToast('Sushi rice already added.');
+            flySprite(SHEETS.pl, ing.pl, bowlW * 0.38, bowlW * 0.38, clientX, clientY, -8, targetRect, 0);
+            return;
+          }
+          pushUndo();
+          state.hasRice = true;
+          bowlEl.classList.remove('squash');
+          void bowlEl.offsetWidth;
+          bowlEl.classList.add('squash');
+          syncUI();
+          showToast('Sushi rice added.');
+          return;
+        }
+
+        // Topping or protein before rice
+        if (!state.hasRice) {
+          showToast('Start with sushi rice!');
+          flySprite(SHEETS.pl, ing.pl, bowlW * 0.38, bowlW * 0.38, clientX, clientY, -8, targetRect, 0);
+          return;
+        }
+
+        if (state.piles.length >= 8) {
+          showToast('Bowl has 8 toppings max!');
+          flySprite(SHEETS.pl, ing.pl, bowlW * 0.38, bowlW * 0.38, clientX, clientY, -8, targetRect, 0);
+          return;
+        }
+
+        let nx = norm.nx;
+        let ny = norm.ny;
+        let r = Math.hypot(nx, ny);
+        if (r > 0.62) {
+          nx *= 0.62 / r;
+          ny *= 0.62 / r;
+        }
+
+        // Nudge away from existing piles (min normalized gap 0.38)
+        for (let iter = 0; iter < 14; iter++) {
+          for (const existing of state.piles) {
+            let dx = nx - existing.nx;
+            let dy = ny - existing.ny;
+            let d = Math.hypot(dx, dy);
+            if (d < 0.38) {
+              if (d < 0.001) {
+                const ang = (state.piles.length * 1.9) % (Math.PI * 2);
+                dx = Math.cos(ang);
+                dy = Math.sin(ang);
+                d = 1;
+              }
+              const push = (0.38 - d) * 0.65;
+              nx += (dx / d) * push;
+              ny += (dy / d) * push;
+              const nr = Math.hypot(nx, ny);
+              if (nr > 0.62) {
+                nx *= 0.62 / nr;
+                ny *= 0.62 / nr;
+              }
+            }
+          }
+        }
+
+        pushUndo();
+        const newId = nextPileId++;
+        state.piles.push({ id: newId, key, nx, ny });
+        syncUI({ animatePileId: newId });
+        showToast(`${ing.name} added.`);
+      }
+
+      // Drop side
+      function dropSide(key, clientX, clientY) {
+        const sd = SIDES.find(s => s.key === key);
+        const targetRect = sideElements[key].getBoundingClientRect();
+        if (!isOverSideComp(clientX, clientY)) {
+          showToast('Drop it in the side spot!');
+          flySprite(SHEETS.sd, sd.box, 11 * 0.8, 12.4 * 0.8, clientX, clientY, 0, targetRect, 0);
+          return;
+        }
+        pushUndo();
+        state.side = key;
+        syncUI({ animateSide: true });
+        showToast(`${sd.name} on the side.`);
+      }
+
+      // Pick up handlers
+      function pickUp(type, key, clientX, clientY) {
+        if (state.topped) return;
+        if (type === 'bottle' && !state.hasRice) {
+          showToast('Start with sushi rice!');
+          return;
+        }
+        if (held) clearHeld();
+        pointer.down = true;
+        const vis = setHeldVisual(type, key);
+        held = {
+          type,
+          key,
+          startX: clientX,
+          startY: clientY,
+          moved: false,
+          fromClick: false,
+          drawing: false,
+          activePoints: [],
+          ...vis
+        };
+        if (type === 'bottle') {
+          bottleElements[key].classList.add('carrying');
+        }
+        positionHeld(clientX, clientY);
+        updateGloveState();
+      }
+
+      Object.entries(panElements).forEach(([key, el]) => {
+        el.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0 || !document.body.classList.contains('open') || state.topped) return;
+          if (held) return;
+          e.stopPropagation();
+          pickUp('ing', key, e.clientX, e.clientY);
+        });
+      });
+
+      Object.entries(bottleElements).forEach(([key, el]) => {
+        el.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0 || !document.body.classList.contains('open') || state.topped) return;
+          if (held) return;
+          e.stopPropagation();
+          pickUp('bottle', key, e.clientX, e.clientY);
+        });
+      });
+
+      Object.entries(sideElements).forEach(([key, el]) => {
+        el.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0 || !document.body.classList.contains('open') || state.topped) return;
+          if (held) return;
+          e.stopPropagation();
+          pickUp('side', key, e.clientX, e.clientY);
+        });
+      });
+
+      // Global pointer tracking for glove, dragging, and sauce drawing
+      function updateGloveState() {
+        if (held) {
+          gloveEl.dataset.state = 'grab';
+          return;
+        }
+        const el = document.elementFromPoint(pointer.x, pointer.y);
+        const interactive = el && el.closest('button, a, input, select, label, [data-interactive="true"]');
+        gloveEl.dataset.state = interactive ? 'point' : 'open';
+      }
+
+      function positionGlove(x, y) {
+        const st = gloveEl.dataset.state;
+        const hotX = st === 'point' ? 22 : 28;
+        const hotY = st === 'point' ? 7 : 28;
+        gloveEl.style.transform = `translate3d(${x - hotX}px, ${y - hotY}px, 0)`;
+        gloveEl.classList.add('visible');
+      }
+
+      function recordSaucePoint(clientX, clientY) {
+        const r = bowlEl.getBoundingClientRect();
+        const x = (clientX - r.left) / r.width;
+        const y = (clientY - r.top) / r.height;
+        const pts = held.activePoints;
+        if (pts.length === 0) {
+          pts.push({ x, y });
+        } else {
+          const prev = pts[pts.length - 1];
+          const dist = Math.hypot((x - prev.x) * r.width, (y - prev.y) * r.height);
+          if (dist >= 5) pts.push({ x, y });
+        }
+        redrawSauces({ key: held.key, points: pts });
+      }
+
+      document.addEventListener('pointerdown', (e) => {
+        pointer.x = e.clientX;
+        pointer.y = e.clientY;
+        pointer.down = true;
+        positionGlove(e.clientX, e.clientY);
+
+        if (!held) return;
+
+        if (held.type === 'bottle' && held.fromClick) {
+          const norm = getBowlNormalized(e.clientX, e.clientY);
+          if (norm.dist <= 1.25) {
+            held.drawing = true;
+            held.activePoints = [];
+            recordSaucePoint(e.clientX, e.clientY);
+            positionHeld(e.clientX, e.clientY);
+          } else {
+            cancelHeldWithFly();
+          }
+          return;
+        }
+
+        if (held.fromClick && held.type !== 'bottle') {
+          const cur = held;
+          clearHeld();
+          if (cur.type === 'ing') dropIngredient(cur.key, e.clientX, e.clientY);
+          else if (cur.type === 'side') dropSide(cur.key, e.clientX, e.clientY);
+        }
+      });
+
+      document.addEventListener('pointermove', (e) => {
+        pointer.x = e.clientX;
+        pointer.y = e.clientY;
+
+        if (held) {
+          if (!held.moved && Math.hypot(e.clientX - held.startX, e.clientY - held.startY) > 6) {
+            held.moved = true;
+          }
+
+          if (held.type === 'bottle') {
+            const norm = getBowlNormalized(e.clientX, e.clientY);
+            if (!held.fromClick && pointer.down && held.moved && norm.dist <= 1.15) {
+              held.drawing = true;
+            }
+            if (held.drawing && pointer.down) {
+              recordSaucePoint(e.clientX, e.clientY);
+            }
+          }
+
+          // Hover glow targets
+          const norm = getBowlNormalized(e.clientX, e.clientY);
+          bowlEl.classList.toggle('glow', (held.type === 'ing' || held.type === 'bottle') && norm.dist <= 1.25);
+          sideCompEl.classList.toggle('glow', held.type === 'side' && isOverSideComp(e.clientX, e.clientY));
+
+          positionHeld(e.clientX, e.clientY);
+        }
+
+        updateGloveState();
+        positionGlove(e.clientX, e.clientY);
+      });
+
+      document.addEventListener('pointerup', (e) => {
+        pointer.x = e.clientX;
+        pointer.y = e.clientY;
+        pointer.down = false;
+
+        if (!held) return;
+
+        // Bottle release
+        if (held.type === 'bottle') {
+          if (held.drawing) {
+            const pts = held.activePoints;
+            const cur = held;
+            const bt = BOTTLES.find(b => b.key === cur.key);
+            const targetRect = bottleElements[cur.key].getBoundingClientRect();
+            const fromRot = -158;
+            if (pts.length >= 4) {
+              pushUndo();
+              state.sauces.push({ key: cur.key, points: pts });
+              clearHeld();
+              syncUI();
+              showToast(`${bt.name} on top.`);
+            } else {
+              // Discard short stroke
+              clearHeld();
+              redrawSauces();
+            }
+            // Hide original during fly-back then reveal
+            const slot = bottleElements[cur.key];
+            slot.classList.add('carrying');
+            flySprite(cur.sheet, cur.box, cur.sizeW, cur.sizeH, e.clientX, e.clientY, fromRot, targetRect, 0);
+            setTimeout(() => slot.classList.remove('carrying'), 400);
+            return;
+          }
+          if (!held.moved && !held.fromClick) {
+            held.fromClick = true;
+            return;
+          }
+          if (held.moved) {
+            cancelHeldWithFly();
+            return;
+          }
+        }
+
+        // Ingredient or Side release
+        if (!held.fromClick) {
+          if (!held.moved) {
+            held.fromClick = true;
+            return;
+          }
+          const cur = held;
+          clearHeld();
+          if (cur.type === 'ing') dropIngredient(cur.key, e.clientX, e.clientY);
+          else if (cur.type === 'side') dropSide(cur.key, e.clientX, e.clientY);
+        }
+      });
+
+      document.addEventListener('mouseleave', () => {
+        gloveEl.classList.remove('visible');
+      });
+
+      // Keyboard shortcuts: Esc & Cmd/Ctrl+Z
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (checkoutOverlay.classList.contains('show')) {
+            closeCheckout();
+          } else if (howPopover.classList.contains('show')) {
+            toggleHow(false);
+          } else if (held) {
+            cancelHeldWithFly();
+          }
+        } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+          const tag = document.activeElement && document.activeElement.tagName;
+          if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+          e.preventDefault();
+          performUndo();
+        }
+      });
+
+      // Undo
+      function performUndo() {
+        if (undoStack.length === 0) return;
+        const prev = undoStack.pop();
+        state = prev;
+        syncUI();
+        if (state.topped) {
+          startGarnishRain();
+          openReceipt(true);
+        }
+      }
+      undoBtn.addEventListener('click', performUndo);
+
+      // Top it off
+      topOffBtn.addEventListener('click', () => {
+        if (!state.hasRice || state.piles.length === 0 || state.topped) return;
+        pushUndo();
+        state.topped = true;
+        syncUI();
+        startGarnishRain();
+        showToast('One very good bowl.');
+        receiptTimer = setTimeout(() => {
+          openReceipt(false);
+        }, 650);
+      });
+
+      // Back to building
+      backBuildingBtn.addEventListener('click', () => {
+        if (!state.topped) return;
+        pushUndo();
+        state.topped = false;
+        syncUI();
+      });
+
+      // Fulfillment radio change
+      document.querySelectorAll('input[name="fulfill"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          state.fulfill = radio.value;
+          const targetTotal = computeTotal(true);
+          animateNumber(
+            rcpTotalEl,
+            displayedRcpTotal,
+            targetTotal,
+            v => { displayedRcpTotal = v; },
+            () => rcpTotalAnimRaf,
+            id => { rcpTotalAnimRaf = id; }
+          );
+        });
+      });
+
+      // Checkout
+      function openCheckout() {
+        checkoutCard.classList.remove('confirmed');
+        coNameInput.classList.remove('err');
+        coPhoneInput.classList.remove('err');
+
+        const isDel = state.fulfill === 'delivery';
+        coPlaceLabel.textContent = isDel ? 'Deliver to' : 'Pick up at';
+        const options = isDel ? DELIVERY_ADDRESSES : PICKUP_LOCATIONS;
+        coPlaceSelect.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
+        coTotalEl.textContent = '$' + computeTotal(true).toFixed(2);
+        checkoutOverlay.classList.add('show');
+      }
+
+      function closeCheckout() {
+        checkoutOverlay.classList.remove('show');
+      }
+
+      checkoutOpenBtn.addEventListener('click', openCheckout);
+      coCancelBtn.addEventListener('click', closeCheckout);
+      checkoutOverlay.addEventListener('pointerdown', (e) => {
+        if (e.target === checkoutOverlay && !checkoutCard.classList.contains('confirmed')) {
+          closeCheckout();
+        }
+      });
+
+      placeOrderBtn.addEventListener('click', () => {
+        let valid = true;
+        if (!coNameInput.value.trim()) {
+          coNameInput.classList.remove('err');
+          void coNameInput.offsetWidth;
+          coNameInput.classList.add('err');
+          valid = false;
+        }
+        if (!coPhoneInput.value.trim()) {
+          coPhoneInput.classList.remove('err');
+          void coPhoneInput.offsetWidth;
+          coPhoneInput.classList.add('err');
+          valid = false;
+        }
+        if (!valid) {
+          showToast('Enter your name and phone.');
+          return;
+        }
+        checkoutCard.classList.add('confirmed');
+      });
+
+      anotherBtn.addEventListener('click', () => {
+        closeCheckout();
+        state = {
+          hasRice: false,
+          piles: [],
+          sauces: [],
+          side: null,
+          topped: false,
+          fulfill: 'pickup'
+        };
+        undoStack = [];
+        coNameInput.value = '';
+        coPhoneInput.value = '';
+        syncUI();
+        showToast('Grab some sushi rice to start.');
+      });
+
+      // Initial sync
+      syncUI();
+    })();
+  </script>
+</body>
+</html>

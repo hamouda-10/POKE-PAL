@@ -1,0 +1,8 @@
+{
+  "name": "Poke Pal — Build Your Bowl",
+  "description": "Playful top-down interactive poke-bowl builder on a brushed-steel counter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
